@@ -17,7 +17,7 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name;
+    private String username;
 
     @Column(name = "LASTNAME")
     private String lastName;
@@ -28,7 +28,8 @@ public class User implements UserDetails {
     @Column
     private boolean enabled = true;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
+//            (fetch = FetchType.LAZY)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -39,7 +40,7 @@ public class User implements UserDetails {
     public User() {}
 
     public User(String name, String lastName, String password) {
-        this.name = name;
+        this.username = name;
         this.lastName = lastName;
         this.password = password;
     }
@@ -52,13 +53,18 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+
+    //    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
 
     public String getLastName() {
         return lastName;
@@ -90,7 +96,7 @@ public class User implements UserDetails {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", name='" + username + '\'' +
                 ", lastName='" + lastName + '\'' +
                 '}';
     }
@@ -101,12 +107,12 @@ public class User implements UserDetails {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
         return Objects.equals(id, user.id) &&
-                Objects.equals(name, user.name);
+                Objects.equals(username, user.username);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name);
+        return Objects.hash(id, username);
     }
 
     @Override
@@ -125,7 +131,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name; // Используем name как username
+        return username; // Используем name как username
     }
 
     @Override
