@@ -28,7 +28,7 @@ public class User implements UserDetails {
     @Column
     private boolean enabled = true;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
 //            (fetch = FetchType.LAZY)
     @JoinTable(
             name = "users_roles",

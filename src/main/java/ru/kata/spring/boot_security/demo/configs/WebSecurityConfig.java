@@ -8,22 +8,21 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import ru.kata.spring.boot_security.demo.model.Role;
+import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.UserService;
-
-import javax.sql.DataSource;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final SuccessUserHandler successUserHandler;
+
+
 
     private UserService userService;
     @Autowired
@@ -40,6 +39,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .antMatchers("/", "/index").permitAll()
+
+
+
                 .antMatchers("/user").hasRole("USER")
 
 
@@ -59,7 +61,95 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll();
     }
 
-    // аутентификация inMemory
+
+
+
+    @Bean
+    public CommandLineRunner initUsers(UserService userService,
+                                       PasswordEncoder passwordEncoder,
+                                       RoleRepository roleRepository) {
+        return args -> {
+            // Создаем роли, если их нет
+
+            Role adminRole = createRoleIfNotExists("ROLE_ADMIN", roleRepository);
+            Role userRole = createRoleIfNotExists("ROLE_USER", roleRepository);
+
+            // Создаем администратора
+            createUserIfNotExists(
+                    "admin",
+                    "admin",  // пароль будет закодирован
+                    "Adminov",
+                    Set.of(adminRole),//, userRole),  // админ может иметь и роль пользователя
+                    userService,
+                    passwordEncoder
+            );
+
+            // Создаем обычного пользователя
+            createUserIfNotExists(
+                    "user",
+                    "user",  // пароль будет закодирован
+                    "Userov",
+                    Set.of(userRole),
+                    userService,
+                    passwordEncoder
+            );
+        };
+    }
+
+    private Role createRoleIfNotExists(String roleName, RoleRepository roleRepository) {
+        Role role = roleRepository.findByName(roleName);
+        if (role == null) {
+            role = new Role(roleName);
+            roleRepository.save(role);
+        }
+        return role;
+    }
+
+    private void createUserIfNotExists(String username,
+                                       String password,
+                                       String lastName,
+                                       Set<Role> roles,
+                                       UserService userService,
+                                       PasswordEncoder passwordEncoder) {
+        if (userService.findByUsername(username) == null) {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode(password));  // кодируем пароль
+            user.setLastName(lastName);
+            user.setEnabled(true);
+            user.setRoles(roles);
+            userService.save(user);
+        }
+    }
+
+
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+
+   @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setUserDetailsService((UserDetailsService) userService);
+
+
+        return authenticationProvider;
+   }
+
+}
+
+
+
+
+
+
+
+// аутентификация inMemory
 //    @Bean
 //    @Override
 //    public UserDetailsService userDetailsService() {
@@ -120,28 +210,3 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //        return jdbcUserDetailsManager;
 //
 //      }
-
-
-
-
-
-
-
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-
-   @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        authenticationProvider.setUserDetailsService((UserDetailsService) userService);
-
-
-        return authenticationProvider;
-   }
-
-}
