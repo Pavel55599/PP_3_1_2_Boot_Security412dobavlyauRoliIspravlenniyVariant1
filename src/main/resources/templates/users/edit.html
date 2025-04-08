@@ -1,3 +1,21 @@
+<!--&lt;!&ndash; Пример для new.html &ndash;&gt;-->
+<!--<form th:action="@{/users}" th:object="${user}" method="post">-->
+<!--  &lt;!&ndash; Другие поля &ndash;&gt;-->
+<!--  <div>-->
+<!--    <label>Roles:</label>-->
+<!--    <div th:each="role : ${allRoles}">-->
+<!--      <input type="checkbox"-->
+<!--             th:id="'role_' + ${role.id}"-->
+<!--             th:value="${role.id}"-->
+<!--             name="selectedRoles"-->
+<!--             th:checked="${user.roles.contains(role)}">-->
+<!--      <label th:for="'role_' + ${role.id}" th:text="${role.name}"></label>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--  <button type="submit">Save</button>-->
+<!--</form>-->
+
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
