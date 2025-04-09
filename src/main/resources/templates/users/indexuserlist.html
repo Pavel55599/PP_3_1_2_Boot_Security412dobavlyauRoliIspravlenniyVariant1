@@ -13,6 +13,7 @@
     <th>Name</th>
     <th>Last Name</th>
     <th>enabled</th>
+    <th>roles</th>
     <th>password</th>
     <th>View</th>
     <th>Edit</th>
@@ -26,7 +27,9 @@
     <td th:text="${user.username}"></td>
     <td th:text="${user.lastName}"></td>
     <td th:text="${user.enabled}"></td>
+    <td th:text="${user.roles}"></td>
     <td th:text="${user.password}"></td>
+
     <td>
       <a th:href="@{/users/show(id=${user.id})}">View</a>
     </td>

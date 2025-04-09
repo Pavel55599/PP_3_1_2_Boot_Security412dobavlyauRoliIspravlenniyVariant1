@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.cache.EhCacheBasedUserCache;
+import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.kata.spring.boot_security.demo.model.Role;
@@ -63,64 +65,64 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
 
+//
+//    @Bean
+//    public CommandLineRunner initUsers(UserService userService,
+//                                       PasswordEncoder passwordEncoder,
+//                                       RoleRepository roleRepository) {
+//        return args -> {
+//            // Создаем роли, если их нет
+//
+//            Role adminRole = createRoleIfNotExists("ROLE_ADMIN", roleRepository);
+//            Role userRole = createRoleIfNotExists("ROLE_USER", roleRepository);
+//
+//            // Создаем администратора
+//            createUserIfNotExists(
+//                    "admin",
+//                    "admin",  // пароль будет закодирован
+//                    "Adminov",
+//                    Set.of(adminRole),//, userRole),  // админ может иметь и роль пользователя
+//                    userService,
+//                    passwordEncoder
+//            );
+//
+//            // Создаем обычного пользователя
+//            createUserIfNotExists(
+//                    "user",
+//                    "user",  // пароль будет закодирован
+//                    "Userov",
+//                    Set.of(userRole),
+//                    userService,
+//                    passwordEncoder
+//            );
+//        };
+//    }
 
-    @Bean
-    public CommandLineRunner initUsers(UserService userService,
-                                       PasswordEncoder passwordEncoder,
-                                       RoleRepository roleRepository) {
-        return args -> {
-            // Создаем роли, если их нет
-
-            Role adminRole = createRoleIfNotExists("ROLE_ADMIN", roleRepository);
-            Role userRole = createRoleIfNotExists("ROLE_USER", roleRepository);
-
-            // Создаем администратора
-            createUserIfNotExists(
-                    "admin",
-                    "admin",  // пароль будет закодирован
-                    "Adminov",
-                    Set.of(adminRole),//, userRole),  // админ может иметь и роль пользователя
-                    userService,
-                    passwordEncoder
-            );
-
-            // Создаем обычного пользователя
-            createUserIfNotExists(
-                    "user",
-                    "user",  // пароль будет закодирован
-                    "Userov",
-                    Set.of(userRole),
-                    userService,
-                    passwordEncoder
-            );
-        };
-    }
-
-    private Role createRoleIfNotExists(String roleName, RoleRepository roleRepository) {
-        Role role = roleRepository.findByName(roleName);
-        if (role == null) {
-            role = new Role(roleName);
-            roleRepository.save(role);
-        }
-        return role;
-    }
-
-    private void createUserIfNotExists(String username,
-                                       String password,
-                                       String lastName,
-                                       Set<Role> roles,
-                                       UserService userService,
-                                       PasswordEncoder passwordEncoder) {
-        if (userService.findByUsername(username) == null) {
-            User user = new User();
-            user.setUsername(username);
-            user.setPassword(passwordEncoder.encode(password));  // кодируем пароль
-            user.setLastName(lastName);
-            user.setEnabled(true);
-            user.setRoles(roles);
-            userService.save(user);
-        }
-    }
+//    private Role createRoleIfNotExists(String roleName, RoleRepository roleRepository) {
+//        Role role = roleRepository.findByName(roleName);
+//        if (role == null) {
+//            role = new Role(roleName);
+//            roleRepository.save(role);
+//        }
+//        return role;
+//    }
+//
+//    private void createUserIfNotExists(String username,
+//                                       String password,
+//                                       String lastName,
+//                                       Set<Role> roles,
+//                                       UserService userService,
+//                                       PasswordEncoder passwordEncoder) {
+//        if (userService.findByUsername(username) == null) {
+//            User user = new User();
+//            user.setUsername(username);
+//            user.setPassword(passwordEncoder.encode(password));  // кодируем пароль
+//            user.setLastName(lastName);
+//            user.setEnabled(true);
+//            user.setRoles(roles);
+//            userService.save(user);
+//        }
+//    }
 
 
 
@@ -137,6 +139,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         authenticationProvider.setUserDetailsService((UserDetailsService) userService);
 
+      //  authenticationProvider.setUserCache(new EhCacheBasedUserCache());
 
         return authenticationProvider;
    }

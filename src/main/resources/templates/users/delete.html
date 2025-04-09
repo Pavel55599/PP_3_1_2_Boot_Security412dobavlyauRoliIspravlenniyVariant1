@@ -13,6 +13,7 @@
 <p><strong>Last Name:</strong> <span th:text="${user.lastName}"></span></p>
 <p><strong>enabled</strong> <span th:text="${user.enabled}"></span></p>
 <p><strong>password</strong> <span th:text="${user.password}"></span></p>
+<p><strong>Role</strong> <span th:text="${user.roles}"></span></p>
 
 <form th:action="@{/users/delete}" method="post">
   <input type="hidden" name="id" th:value="${user.id}">

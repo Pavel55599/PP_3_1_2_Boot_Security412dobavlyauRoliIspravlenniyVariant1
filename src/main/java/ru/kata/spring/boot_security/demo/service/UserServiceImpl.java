@@ -94,6 +94,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -104,6 +105,7 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.util.Collection;
 import java.util.List;
@@ -152,13 +154,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .collect(Collectors.toList());
     }
 
-
     @Override
     public void save(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Если пароль не начинается с BCrypt-префикса, хешируем его
+        if (user.getPassword() == null || !user.getPassword().startsWith("$2a$")) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         userRepository.save(user);
-
     }
+
+//    @Override
+//    public void save(User user) {
+//        user.setPassword(passwordEncoder.encode(user.getPassword()));
+//        userRepository.save(user);
+//
+//    }
 
     @Override
     public User findById(Long id) {
@@ -172,12 +182,78 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     }
 
-    @Override
-    public void update(Long id, User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+//    @Override
+//    public void update(Long id, User user) {
+//
+//               user.setPassword(passwordEncoder.encode(user.getPassword()));
+//        userRepository.save(user);
+//    }
 
+
+
+
+    @Override
+    @Transactional
+    public void update(Long id, User updatedUser ) {
+        // 1. Находим существующего пользователя
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+
+        // 2. Обновляем username (если изменился)
+        if (updatedUser.getUsername() != null && !updatedUser.getUsername().equals(existingUser.getUsername())) {
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+
+        // 3. Обновляем фамилию (если изменилась)
+        if (updatedUser.getLastName() != null && !updatedUser.getLastName().equals(existingUser.getLastName())) {
+            existingUser.setLastName(updatedUser.getLastName());
+        }
+
+        // 4. Безопасное обновление пароля
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            // 4.1. Проверяем, что новый пароль отличается от текущего
+            if (passwordEncoder.matches(updatedUser.getPassword(), existingUser.getPassword())) {
+                throw new IllegalArgumentException("New password must differ from current password");
+            }
+
+            // 4.2. Хешируем и сохраняем новый пароль
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        }
+
+        // 5. Обновляем роли (если изменились)
+        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
+            existingUser.setRoles(updatedUser.getRoles());
+        }
+
+        // 6. Сохраняем обновленные данные
+        userRepository.save(existingUser);
+
+//        // 7. Очищаем контекст безопасности (если пользователь авторизован)
+//        SecurityContextHolder.clearContext();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void delete(Long id) {
